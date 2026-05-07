@@ -1,0 +1,77 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: juzhi-api
+
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: sulei1124
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # 数据库自动初始化（Java读取SQL文件，兼容所有环境）
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      continue-on-error: true
+
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+
+  # Jackson 配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.aiplatform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置
+jwt:
+  secret: JuzhiAPIPlatformSecretKey2024ForJWTTokenGenerationAndValidation!
+  expiration: 86400000  # 24小时 (毫秒)
+  header: Authorization
+  prefix: "Bearer "
+
+# AI 网关配置
+ai-gateway:
+  url: http://localhost:3000
+  api-key: sk-your-gateway-api-key
+  timeout: 120000  # 2分钟超时
+
+# 限流配置
+rate-limit:
+  per-minute: 60  # 每分钟请求限制
+  daily-max-cost: 10000000  # 每日最大消耗 credits (100元)
+
+# 日志级别配置
+logging:
+  level:
+    com.aiplatform.mapper: debug
+    org.springframework.security: info
