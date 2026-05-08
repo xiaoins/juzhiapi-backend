@@ -26,10 +26,12 @@
   - [获取模型详情](#8-获取模型详情-apimodelsid)
   - [钱包信息](#9-钱包信息-apiwallet)
   - [钱包流水](#10-钱包流水-apiwalletlogs)
-  - [API Key 管理](#11-api-key-管理apiaipkeys)
-  - [聊天会话管理](#12-聊天会话管理-apichatsession)
-  - [发送消息](#13-发送消息-apichatsend-sse流式)
-  - [获取消息记录](#14-获取消息记录-apichatmessagessessionid)
+  - [创建充值订单](#11-创建充值订单-apiwalletrecharge)
+  - [我的充值订单列表](#12-我的充值订单列表-apiwalletorders)
+  - [API Key 管理](#13-api-key-管理apiaipkeys)
+  - [聊天会话管理](#14-聊天会话管理-apichatsession)
+  - [发送消息](#15-发送消息-apichatsend-sse流式)
+  - [获取消息记录](#16-获取消息记录-apichatmessagessessionid)
 - [OpenAI 兼容接口](#openai-兼容接口)
   - [聊天补全](#15-chat-completions-v1chatcompletions)
 - [管理员接口（需ADMIN角色）](#管理员接口需admin角色)
@@ -587,7 +589,122 @@ Authorization: Bearer <token>
 
 ---
 
-### 14. API Key 管理
+### 11. 创建充值订单 (`/api/wallet/recharge`)
+
+用户提交充值请求，生成待支付订单。管理员确认后 credits 到账。
+
+**请求**
+
+```
+POST /api/wallet/recharge
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+
+**请求体**
+
+| 字段 | 类型 | 必填 | 校验规则 | 说明 |
+|------|------|------|----------|------|
+| amount | decimal | **是** | 1~100,000 | 充值金额（元） |
+| payType | string | **是** | 非空 | 支付方式：`ALIPAY` / `WECHAT` / `BANK_TRANSFER` / `MANUAL` |
+
+**请求示例**
+
+```json
+{ "amount": 100.00, "payType": "MANUAL" }
+```
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {
+    "id": 1,
+    "userId": 2,
+    "orderNo": "RCD202605081658001234",
+    "amount": 100.00,
+    "credits": 100000,
+    "status": "PENDING",
+    "payType": "MANUAL",
+    "paidAt": null,
+    "remark": "用户自助充值",
+    "createdAt": "2026-05-08 16:58:00"
+  }
+}
+```
+
+> 兑换比例：**1 元 = 1000 credits**
+> 订单状态为 `PENDING`，需管理员在后台确认后到账
+
+**响应字段 — RechargeOrder**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | long | 订单ID |
+| userId | long | 用户ID |
+| orderNo | string | 订单号（格式：`RCD` + 时间戳 + 用户ID尾数） |
+| amount | decimal | 充值金额(元) |
+| credits | long | 获得的 credits 数量 |
+| status | string | 状态：`PENDING`=待处理, `PAID`=已到账, `CANCELLED`=已取消 |
+| payType | string? | 支付方式 |
+| paidAt | datetime? | 支付/到账时间 |
+| remark | string? | 备注 |
+| createdAt | datetime | 创建时间 |
+
+---
+
+### 12. 我的充值订单列表 (`/api/wallet/orders`)
+
+查看当前用户的充值历史记录。
+
+**请求**
+
+```
+GET /api/wallet/orders?current=1&size=20&status=
+Authorization: Bearer <token>
+```
+
+**Query 参数**
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| current | int | 1 | 页码 |
+| size | int | 20 | 每页条数 |
+| status | string | 否 | 按状态筛选：`PENDING`/`PAID`/`CANCELLED` |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {
+    "records": [
+      {
+        "id": 1,
+        "userId": 2,
+        "orderNo": "RCD202605081658001234",
+        "amount": 100.00,
+        "credits": 100000,
+        "status": "PAID",
+        "payType": "MANUAL",
+        "paidAt": "2026-05-08 17:00:00",
+        "remark": "用户自助充值",
+        "createdAt": "2026-05-08 16:58:00"
+      }
+    ],
+    "total": 1,
+    "current": 1,
+    "size": 20
+  }
+}
+```
+
+---
+
+### 13. API Key 管理
 
 #### 14.1 创建 API Key
 
@@ -726,9 +843,9 @@ Authorization: Bearer <token>
 
 ---
 
-### 15. 聊天会话管理
+### 14. 聊天会话管理
 
-#### 15.1 创建会话
+#### 14.1 创建会话
 
 **请求**
 
@@ -773,7 +890,7 @@ Authorization: Bearer <token>
 | createdAt | datetime | 创建时间 |
 | updatedAt | datetime | 更新时间 |
 
-#### 15.2 获取会话列表
+#### 14.2 获取会话列表
 
 **请求**
 
@@ -786,7 +903,7 @@ Authorization: Bearer <token>
 
 分页数据，records 中每项为 [SessionVO](#151-创建会话) 格式。
 
-#### 15.3 删除会话
+#### 14.3 删除会话
 
 **请求**
 
@@ -809,7 +926,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 16. 发送消息 (SSE 流式)
+### 15. 发送消息 (SSE 流式)
 
 向 AI 发送聊天消息，支持 Server-Sent Events 流式返回。
 
@@ -860,7 +977,7 @@ data:[DONE]
 
 ---
 
-### 17. 获取消息记录
+### 16. 获取消息记录
 
 **请求**
 
@@ -933,7 +1050,7 @@ Authorization: Bearer <token>
 > 这些接口兼容 OpenAI API 格式，可直接用于 ChatGPT、Cursor、Cherry Studio 等客户端。
 > 认证方式：Header `Authorization: Bearer <api_key>` 或 `<jwt_token>`
 
-### 18. Chat Completions (`/v1/chat/completions`)
+### 17. Chat Completions (`/v1/chat/completions`)
 
 OpenAI 格式的聊天补全接口，支持流式和非流式模式。
 
@@ -1011,9 +1128,9 @@ data:{"id":"chatcmpl-xxx","object":"chat.completion.chunk","created":1705312800,
 
 > 以下接口除 JWT 认证外，还要求当前用户角色为 `ADMIN`。
 
-### 19. 用户管理 (`/api/admin/users`)
+### 18. 用户管理 (`/api/admin/users`)
 
-#### 19.1 获取用户列表（分页）
+#### 18.1 获取用户列表（分页）
 
 **请求**
 
@@ -1026,7 +1143,7 @@ Authorization: Bearer <admin_token>
 
 分页数据，records 中每项为 [UserInfoVO](#4-用户登录) 格式。
 
-#### 19.2 获取用户详情
+#### 18.2 获取用户详情
 
 **请求**
 
@@ -1041,7 +1158,7 @@ Authorization: Bearer <admin_token>
 |------|------|------|
 | id | long | 用户ID |
 
-#### 19.3 启用/禁用用户
+#### 18.3 启用/禁用用户
 
 **请求**
 
@@ -1068,7 +1185,7 @@ Authorization: Bearer <admin_token>
 { "code": 200, "msg": "操作成功" }
 ```
 
-#### 19.4 调整用户余额
+#### 18.4 调整用户余额
 
 **请求**
 
@@ -1100,9 +1217,9 @@ Authorization: Bearer <admin_token>
 
 ---
 
-### 20. 模型管理 (`/api/admin/models`)
+### 19. 模型管理 (`/api/admin/models`)
 
-#### 20.1 获取模型列表（分页，含未启用的）
+#### 19.1 获取模型列表（分页，含未启用的）
 
 **请求**
 
@@ -1115,7 +1232,7 @@ Authorization: Bearer <admin_token>
 
 分页数据，records 中包含完整的 AiModel 实体对象。
 
-#### 20.2 创建模型
+#### 19.2 创建模型
 
 **请求**
 
@@ -1152,7 +1269,7 @@ Authorization: Bearer <admin_token>
 }
 ```
 
-#### 20.3 更新模型
+#### 19.3 更新模型
 
 **请求**
 
@@ -1168,9 +1285,9 @@ Authorization: Bearer <admin_token>
 |------|------|------|
 | id | long | 模型ID |
 
-**请求体**: 同 [创建模型](#22-创建模型)
+**请求体**: 同 [创建模型](#192-创建模型)
 
-#### 20.4 删除模型
+#### 19.4 删除模型
 
 **请求**
 
@@ -1187,9 +1304,9 @@ Authorization: Bearer <admin_token>
 
 ---
 
-### 21. 订单管理 (`/api/admin/orders`)
+### 20. 订单管理 (`/api/admin/orders`)
 
-#### 21.1 获取订单列表（分页）
+#### 20.1 获取订单列表（分页）
 
 **请求**
 
@@ -1223,7 +1340,7 @@ Authorization: Bearer <admin_token>
 | paidAt | datetime? | 支付时间 |
 | createdAt | datetime | 创建时间 |
 
-#### 21.2 处理订单（确认支付/取消）
+#### 20.2 处理订单（确认支付/取消）
 
 **请求**
 
@@ -1261,7 +1378,7 @@ Authorization: Bearer <admin_token>
 
 ---
 
-### 22. 调用日志 (`/api/admin/logs`)
+### 21. 调用日志 (`/api/admin/logs`)
 
 **请求**
 
@@ -1350,4 +1467,14 @@ curl -s -N -X POST http://localhost:8080/v1/chat/completions \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"model":"deepseek-chat","stream":true,"messages":[{"role":"user","content":"hello"}]}'
+
+# ===== 8. 创建充值订单 =====
+curl -s -X POST http://localhost:8080/api/wallet/recharge \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"amount":100,"payType":"MANUAL"}' | jq
+
+# ===== 9. 查看我的充值订单 =====
+curl -s "http://localhost:8080/api/wallet/orders" \
+  -H "Authorization: Bearer $TOKEN" | jq
 ```
