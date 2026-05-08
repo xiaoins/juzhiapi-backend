@@ -192,17 +192,33 @@ INSERT INTO `user` (`username`, `password`, `role`, `status`) VALUES
 INSERT IGNORE INTO `wallet` (`user_id`, `balance`, `total_recharge`, `total_used`) VALUES
 (1, 1000000, 1000000, 0);
 
--- 插入初始模型数据
+-- 插入初始模型数据 (model_name 使用各厂商标准API模型ID)
 INSERT INTO `ai_model` (`display_name`, `model_name`, `provider`, `input_price`, `output_price`, `sort`, `enabled`, `recommended`) VALUES
+
+-- DeepSeek 系列
 ('DeepSeek V3', 'deepseek-chat', 'DeepSeek', 1, 2, 1, 1, 1),
 ('DeepSeek R1', 'deepseek-reasoner', 'DeepSeek', 5, 15, 2, 1, 1),
-('通义千问 Turbo', 'qwen-turbo', 'Qwen', 1, 2, 3, 1, 0),
-('通义千问 Plus', 'qwen-plus', 'Qwen', 2, 8, 4, 1, 1),
-('通义千问 Max', 'qwen-max', 'Qwen', 4, 20, 5, 1, 0),
-('豆包 Pro', 'doubao-pro-32k', 'ByteDance', 2, 10, 6, 1, 0),
-('GPT-4o Mini', 'gpt-4o-mini', 'OpenAI', 3, 12, 7, 1, 1),
-('GPT-4o', 'gpt-4o', 'OpenAI', 15, 60, 8, 1, 1),
-('Gemini 1.5 Flash', 'gemini-1.5-flash', 'Google', 1, 3, 9, 1, 0),
-('Gemini 1.5 Pro', 'gemini-1.5-pro', 'Google', 8, 25, 10, 1, 0),
-('Claude 3 Haiku', 'claude-3-haiku-20240307', 'Anthropic', 5, 20, 11, 1, 0),
-('Claude 3.5 Sonnet', 'claude-3-5-sonnet-20240620', 'Anthropic', 15, 75, 12, 1, 1);
+
+-- 通义千问 Qwen 系列 (阿里云)
+('Qwen Turbo', 'qwen-turbo', 'Qwen', 1, 2, 3, 1, 1),
+('Qwen Plus', 'qwen-plus', 'Qwen', 2, 8, 4, 1, 0),
+('Qwen Max', 'qwen-max', 'Qwen', 4, 20, 5, 1, 0),
+('Qwen Long', 'qwen-long', 'Qwen', 2, 10, 6, 1, 0),
+('Qwen VL Max', 'qwen-vl-max', 'Qwen', 5, 25, 7, 1, 0),
+
+-- 豆包 Doubao 系列 (字节跳动/火山引擎)
+('Doubao Pro', 'doubao-pro-32k', 'ByteDance', 2, 10, 8, 1, 1),
+('Doubao Lite', 'doubao-lite-32k', 'ByteDance', 1, 4, 9, 1, 0),
+('Doubao Seed Code', 'Doubao-seed-code', 'ByteDance', 2, 8, 10, 1, 0),
+
+-- OpenAI GPT 系列
+('GPT-4o Mini', 'gpt-4o-mini', 'OpenAI', 3, 12, 11, 1, 1),
+('GPT-4o', 'gpt-4o', 'OpenAI', 15, 60, 12, 1, 1),
+
+-- Google Gemini 系列
+('Gemini 2.0 Flash', 'gemini-2.0-flash', 'Google', 1, 3, 13, 1, 0),
+('Gemini 2.0 Pro', 'gemini-2.0-pro', 'Google', 8, 25, 14, 1, 0),
+
+-- Anthropic Claude 系列
+('Claude Sonnet 4', 'claude-sonnet-4-20250514', 'Anthropic', 15, 75, 15, 1, 1),
+('Claude Haiku 3.5', 'claude-haiku-3-5-20241022', 'Anthropic', 5, 20, 16, 1, 0);
